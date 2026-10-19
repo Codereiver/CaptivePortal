@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Access Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon svg {
+            width: 45px;
+            height: 45px;
+            fill: white;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 35px;
+        }
+
+        .connect-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .connect-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .connect-button:active {
+            transform: translateY(0);
+        }
+
+        .connect-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .status-message {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+        </div>
+
+        <h1>Welcome to the Network</h1>
+        <p>To access the internet, please click the button below to connect and agree to the network usage policy.</p>
+
+        <button class="connect-button" id="connectBtn" onclick="authorizeClient()">
+            Click here to connect
+        </button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="footer">
+            Network Access Portal
+        </div>
+    </div>
+
+    <script>
+        function authorizeClient() {
+            const button = document.getElementById('connectBtn');
+            const loading = document.getElementById('loading');
+            const statusMessage = document.getElementById('statusMessage');
+
+            // Disable button and show loading
+            button.disabled = true;
+            loading.classList.add('active');
+            statusMessage.style.display = 'none';
+            statusMessage.className = 'status-message';
+
+            // Get client IP from the request
+            fetch('/authorize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                loading.classList.remove('active');
+
+                if (data.success) {
+                    statusMessage.textContent = 'Connection successful! You now have internet access. You may close this page.';
+                    statusMessage.classList.add('success');
+
+                    // Redirect to a test site after a delay to confirm internet access
+                    setTimeout(() => {
+                        window.location.href = 'http://www.google.com';
+                    }, 2000);
+                } else {
+                    statusMessage.textContent = 'Connection failed: ' + (data.message || 'Unknown error');
+                    statusMessage.classList.add('error');
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                loading.classList.remove('active');
+                statusMessage.textContent = 'An error occurred. Please try again.';
+                statusMessage.classList.add('error');
+                button.disabled = false;
+                console.error('Error:', error);
+            });
+        }
+
+        // Check if already authorized on page load
+        window.addEventListener('load', function() {
+            fetch('/check-auth')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authorized) {
+                        const statusMessage = document.getElementById('statusMessage');
+                        statusMessage.textContent = 'You are already connected to the internet!';
+                        statusMessage.classList.add('success');
+                        document.getElementById('connectBtn').disabled = true;
+                        document.getElementById('connectBtn').textContent = 'Already Connected';
+                    }
+                })
+                .catch(error => {
+                    console.error('Auth check error:', error);
+                });
+        });
+    </script>
+</body>
+</html>

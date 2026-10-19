@@ -1,0 +1,32 @@
+[Unit]
+Description=Captive Portal Authorization Service
+After=network.target nginx.service dnsmasq.service
+Wants=nginx.service dnsmasq.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/local/bin
+
+# Main service command
+ExecStart=/usr/bin/python3 /usr/local/bin/authorize-client.py
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=captiveportal
+
+# Security hardening (optional, may need adjustment)
+# NoNewPrivileges=true
+# PrivateTmp=true
+
+# Environment
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target

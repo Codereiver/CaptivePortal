@@ -1,0 +1,24 @@
+[Unit]
+Description=Captive Portal Firewall Rules
+After=network-online.target
+Wants=network-online.target
+Before=nginx.service dnsmasq.service captiveportal.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Execute firewall rules script
+ExecStart=/usr/local/bin/firewall-rules.sh
+
+# On stop, optionally flush rules (comment out if you want to keep rules)
+# ExecStop=/usr/sbin/iptables -F
+# ExecStop=/usr/sbin/iptables -t nat -F
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=captiveportal-firewall
+
+[Install]
+WantedBy=multi-user.target
