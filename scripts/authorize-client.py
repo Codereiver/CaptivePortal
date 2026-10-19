@@ -135,8 +135,9 @@ def add_firewall_rule(mac_address, ip_address):
         bool: True if successful, False otherwise
     """
     try:
-        # Add NAT PREROUTING exceptions for DNS/HTTP/HTTPS (to skip portal redirect)
+        # Add NAT PREROUTING exceptions for DNS/HTTP (to skip portal redirect)
         # These must be added BEFORE the general redirect rules
+        # Note: HTTPS is not redirected, so no exception needed
         nat_cmds = [
             # Exception for DNS UDP (port 53)
             ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
@@ -149,10 +150,6 @@ def add_firewall_rule(mac_address, ip_address):
             # Exception for HTTP (port 80)
             ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
              '-i', 'ens192', '-p', 'tcp', '--dport', '80',
-             '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN'],
-            # Exception for HTTPS (port 443)
-            ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
-             '-i', 'ens192', '-p', 'tcp', '--dport', '443',
              '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN']
         ]
 

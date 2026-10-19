@@ -124,12 +124,13 @@ iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p tcp --dport 53 -j DNAT --to
 
 # PREROUTING - Redirect HTTP traffic to captive portal for unauthorized clients
 # This ensures that any HTTP request goes to our portal page
+echo -e "${YELLOW}Adding HTTP redirection for unauthorized clients...${NC}"
 iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p tcp --dport 80 -j DNAT --to-destination "$PORTAL_IP:80"
 
-# Redirect HTTPS to HTTP (optional - breaks HTTPS sites but forces portal display)
-# Comment out if you don't want to intercept HTTPS
-# Note: Modern browsers may show security warnings
-iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p tcp --dport 443 -j DNAT --to-destination "$PORTAL_IP:80"
+# DO NOT redirect HTTPS (port 443)
+# Redirecting HTTPS breaks SSL and causes browser errors
+# Modern captive portal detection uses HTTP-only endpoints
+# Unauthorized clients won't be able to access HTTPS sites, but they won't get errors either
 
 ###############################################################################
 # IP FORWARDING
