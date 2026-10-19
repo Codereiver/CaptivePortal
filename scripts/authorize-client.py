@@ -135,6 +135,35 @@ def add_firewall_rule(mac_address, ip_address):
         bool: True if successful, False otherwise
     """
     try:
+        # Add NAT PREROUTING exceptions for DNS/HTTP/HTTPS (to skip portal redirect)
+        # These must be added BEFORE the general redirect rules
+        nat_cmds = [
+            # Exception for DNS UDP (port 53)
+            ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
+             '-i', 'ens192', '-p', 'udp', '--dport', '53',
+             '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN'],
+            # Exception for DNS TCP (port 53)
+            ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
+             '-i', 'ens192', '-p', 'tcp', '--dport', '53',
+             '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN'],
+            # Exception for HTTP (port 80)
+            ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
+             '-i', 'ens192', '-p', 'tcp', '--dport', '80',
+             '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN'],
+            # Exception for HTTPS (port 443)
+            ['iptables', '-t', 'nat', '-I', 'PREROUTING', '1',
+             '-i', 'ens192', '-p', 'tcp', '--dport', '443',
+             '-m', 'mac', '--mac-source', mac_address, '-j', 'RETURN']
+        ]
+
+        for cmd in nat_cmds:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            if result.returncode != 0:
+                logger.error(f"Failed to add NAT rule: {result.stderr}")
+                return False
+
+        logger.info(f"Added NAT exceptions for MAC {mac_address}")
+
         # Add rule to allow forwarding for this MAC address
         # Insert at position 1 (before the DROP rule)
         cmd = [

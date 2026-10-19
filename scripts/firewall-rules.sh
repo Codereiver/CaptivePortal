@@ -116,6 +116,12 @@ echo -e "${YELLOW}Configuring NAT rules...${NC}"
 # POSTROUTING - Masquerade LAN traffic going to internet
 iptables -t nat -A POSTROUTING -o "$WAN_INTERFACE" -s "$LAN_NETWORK" -j MASQUERADE
 
+# PREROUTING - Redirect DNS queries to local dnsmasq for unauthorized clients
+# Authorized clients will have RETURN rules added before this to bypass the redirect
+echo -e "${YELLOW}Adding DNS redirection for unauthorized clients...${NC}"
+iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p udp --dport 53 -j DNAT --to-destination "$PORTAL_IP:53"
+iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p tcp --dport 53 -j DNAT --to-destination "$PORTAL_IP:53"
+
 # PREROUTING - Redirect HTTP traffic to captive portal for unauthorized clients
 # This ensures that any HTTP request goes to our portal page
 iptables -t nat -A PREROUTING -i "$LAN_INTERFACE" -p tcp --dport 80 -j DNAT --to-destination "$PORTAL_IP:80"

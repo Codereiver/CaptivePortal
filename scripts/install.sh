@@ -165,7 +165,7 @@ max-lease-time 7200;
 subnet ${LAN_NETWORK%/*} netmask 255.255.255.0 {
     range $DHCP_RANGE_START $DHCP_RANGE_END;
     option routers $LAN_IP;
-    option domain-name-servers $LAN_IP;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
     option domain-name "portal.local";
 }
 EOF
